@@ -3,14 +3,16 @@ import * as styles from './styles';
 import { DeviceSize, useWindowSize } from './useWindowSize';
 import Slider from '@mui/material/Slider';
 import Stack from '@mui/material/Stack';
-import * as  THREE from 'three'
+import {PerspectiveCamera, Scene, BufferGeometry, LineSegments, LineBasicMaterial, Vector3, WebGLRenderer } from 'three'
 import { renderIntoDocument } from 'react-dom/test-utils';
 import { Color } from 'three';
+import { useHotkeys } from 'react-hotkeys-hook';
+
 
 
 // import './resources/Three'
-//colors, pulse rate, #of shells
-const useSpark = (mainRef: React.RefObject<HTMLDivElement>, rValue: number, shells: Shell[], sliderValueX: number, rotation: number, pulseRate: number, translateX: number, translateY: number, numberOfLines: number, backgroundColor: number, alpha: number) => {
+
+const useSpark = (mainRef: React.RefObject<HTMLDivElement>, rValue: number, shells: Shell[], sliderValueX: number, rotation: number, pulseRate: number, translateX: number, translateY: number, numberOfLines: number, backgroundColor: number, alpha: number, elementHeight: number, elementWidth: number) => {
 
     const windowSize = useWindowSize();
     useEffect(() => {
@@ -18,9 +20,7 @@ const useSpark = (mainRef: React.RefObject<HTMLDivElement>, rValue: number, shel
         //     document.getElementById("oldie").style.display = "block";
         // }
 
-        let SCREEN_WIDTH = window.innerWidth,
-            SCREEN_HEIGHT = window.innerHeight,
-
+        let 
             r = rValue,
 
             mouseX = 0, mouseY = 0,
@@ -48,11 +48,11 @@ const useSpark = (mainRef: React.RefObject<HTMLDivElement>, rValue: number, shel
 
 
             // camera = new THREE.Camera(80, SCREEN_WIDTH / SCREEN_HEIGHT, 1, 3000);
-            camera = new THREE.PerspectiveCamera(80, SCREEN_WIDTH / SCREEN_HEIGHT, 1, 3000);
+            camera = new PerspectiveCamera(80, elementWidth / elementHeight, 1, 3000);
 
             camera.position.z = 1000;
 
-            scene = new THREE.Scene();
+            scene = new Scene();
 
             //This array is the layers of the sphere, delete a subArray to remove a layer
             var i, line: any, vector1, vector2, material, p,
@@ -63,13 +63,13 @@ const useSpark = (mainRef: React.RefObject<HTMLDivElement>, rValue: number, shel
                 // [3.0, 0xaaaaaa, 0.75, 2], [3.5, 0xffffff, 0.5, 1], [4.5, 0xffffff, 0.25, 1], [5.5, 0xffffff, 0.125, 1]],
                 parameters = shells,
                 //geometry = new THREE.Geometry();
-                geometry = new THREE.BufferGeometry()
+                geometry = new BufferGeometry()
 
 
-            const points: THREE.Vector3[] = []
+            const points: Vector3[] = []
             for (i = 0; i < numberOfLines; ++i) {
 
-                vector1 = new THREE.Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
+                vector1 = new Vector3(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
                 vector1.normalize();
                 vector1.multiplyScalar(r);
 
@@ -88,11 +88,11 @@ const useSpark = (mainRef: React.RefObject<HTMLDivElement>, rValue: number, shel
             for (i = 0; i < parameters.length; ++i) {
                 p = parameters[i];
 
-                material = new THREE.LineBasicMaterial({ color: p[1], opacity: p[2], linewidth: 30/* p[3]*/ });
+                material = new LineBasicMaterial({ color: p[1], opacity: p[2], linewidth: 30/* p[3]*/ });
                 //LJ:line = new THREE.Line(geometry, material, THREE.LinePieces);
                 //line = new THREE.LineSegments(geometry, material);
                 lines.push(
-                    line = new THREE.LineSegments(geometry, material /*THREE.LinePieces*/));
+                    line = new LineSegments(geometry, material /*THREE.LinePieces*/));
                 line.scale.x = line.scale.y = line.scale.z = p[0];
                 //LJ: line.originalScale = p[0];
                 scales.push(p[0]);
@@ -112,20 +112,23 @@ const useSpark = (mainRef: React.RefObject<HTMLDivElement>, rValue: number, shel
 
             }
 
-            renderer = new THREE.WebGLRenderer({
+            renderer = new WebGLRenderer({
                 //LJ: Added
                 antialias: true
             });
-            renderer.setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+            
+            //REMEMBER for tomorrow: Change translateMods to multiply by the size of the number given in setSize, make the parent div size be the setSize
+
+            renderer.setSize(elementWidth, elementHeight);
             if (container)
                 container.innerHTML = ''
             container?.appendChild(renderer.domElement);
 
 
-            let xTranslateMod = (translateX - 50)/100 * SCREEN_WIDTH
-            let yTranslateMod = (translateY - 50)/100 * SCREEN_HEIGHT
+            let xTranslateMod = (translateX - 50)/100 * elementWidth
+            let yTranslateMod = (translateY - 50)/100 * elementHeight
 
-            renderer.setViewport(xTranslateMod, yTranslateMod, SCREEN_WIDTH, SCREEN_HEIGHT)
+            renderer.setViewport(xTranslateMod, yTranslateMod, elementWidth, elementHeight)
             renderer.setClearColor(backgroundColor, alpha)
             
 
@@ -231,7 +234,9 @@ type Shell = [
 const newBaseShell: Shell = [0.25, 0xff7700, 1, 2];
 
 
-export const Spark = () => {
+
+
+export const Spark = (props: {height: number, width: number, parentElementRef: React.MutableRefObject<HTMLElement | null>}) => {
 
 
     //BUTTON TO ADD DEFAULT SHELL
@@ -246,6 +251,26 @@ export const Spark = () => {
     const [numberOfLines, setNumberOfLines] = useState<number>(1500)
     const [backgroundColor, setBackgroundColor] = useState<number>(0xffffff)
     const [alpha, setAlpha] = useState<number>(0)
+    const [elementHeight, setElementHeight] = useState<number>(100)
+    const [elementWidth, setElementWidth] = useState<number>(100)
+
+    useHotkeys('ctrl+i', () => setIsOpen(!isOpen), [isOpen])
+
+    useEffect(() =>{
+        const resizeObserver = new ResizeObserver((entry)=>{
+            console.log('Entry')
+            console.log(entry[0].contentBoxSize[0]);
+            setElementWidth(entry[0].contentBoxSize[0].inlineSize + 40)
+            setElementHeight(entry[0].contentBoxSize[0].blockSize + 40)
+        })
+        const cleanUpResizeListener = () =>{
+            resizeObserver.disconnect()
+        }
+        if(props.parentElementRef.current)
+            resizeObserver.observe(props.parentElementRef.current)
+        return cleanUpResizeListener;
+    },[])
+
 
 
     const addDefaultShell = () => {
@@ -269,25 +294,26 @@ export const Spark = () => {
     // }
 
     const mainRef = useRef<HTMLDivElement>(null);
-    useSpark(mainRef, Number(rValue), shells, sliderValueX as number, rotation as number, pulseRate as number, translateX as number, translateY as number, numberOfLines as number, backgroundColor as number, alpha as number)
+
+
+    
+
+    useSpark(mainRef, Number(rValue), shells, sliderValueX as number, rotation as number, pulseRate as number, translateX as number, translateY as number, numberOfLines as number, backgroundColor as number, alpha as number, elementHeight, elementWidth)
     
     return (
         <div className={styles.mainBackground}>
-            <button onClick={() => {
-                setIsOpen(!isOpen)
-                console.log(isOpen)
-            }}>Settings</button>
+            {/* button was here */}
 
             {/* Parameter Box */}
-            {isOpen && <div className={styles.parameterContainer}>
-                <div style={{ display: 'flex', flexDirection: 'row' }}>
+            {isOpen && <div key='parameterBox' className={styles.parameterContainer}>
+                <div key='universalParams' style={{ display: 'flex', flexDirection: 'row' }}>
 
                     <label htmlFor='rVal'> Universal Radius Scale
                         <input style={{ width: '60px' }} value={rValue} id='rVal' onInput={(ev) => {
                             setRValue(ev.currentTarget.value)
                         }}></input>
                     </label>
-                    <div style={{width:'200px'}}>
+                    <div key='translateX' style={{width:'200px'}}>
                         <p>Translate X</p>
                         <input type='number' value={translateX} onInput={(ev) => {
                             setTranslateX(Number(ev.currentTarget.value))
@@ -296,7 +322,7 @@ export const Spark = () => {
                             setTranslateX(value as number)
                         }} />
                     </div>
-                    <div style={{width:'200px'}}>
+                    <div key='translateY' style={{width:'200px'}}>
                         <p>Translate Y</p>
                         <input type='number' value={translateY} onInput={(ev) => {
                             setTranslateY(Number(ev.currentTarget.value))
@@ -305,7 +331,7 @@ export const Spark = () => {
                             setTranslateY(value as number)
                         }} />
                     </div>
-                    <div className={styles.anotherSliderContainer}>
+                    <div key='backgroundColor' className={styles.anotherSliderContainer}>
                         <p>Background Color: </p>
                         <input type='color' value={'#' + backgroundColor.toString(16)} onChange={(ev) => {
                             console.log(backgroundColor)
@@ -313,7 +339,7 @@ export const Spark = () => {
                             setBackgroundColor(hexValue)
                         }}></input>
                     </div>
-                    <div className={styles.anotherSliderContainer}>
+                    <div key='alpha' className={styles.anotherSliderContainer}>
                         <p>Alpha: </p>
                         <input className={styles.parameterInput} value={alpha} onInput={(ev) => {
                             setAlpha(Number(ev.currentTarget.value))
@@ -321,13 +347,13 @@ export const Spark = () => {
                     </div>
                 </div>
                 <button onClick={addDefaultShell}>Add shell</button><br />
-                <div className={styles.sliderContainer}>
+                <div key='sliderContainer' className={styles.sliderContainer}>
                     {shells.map((shell, index) => {
                         return (
-                            <div className={styles.subSliderContainer}>
+                            <div key={`shell_${index}`}className={styles.subSliderContainer}>
                                 <h2>{'Shell: ' + (index + 1)}</h2>
 
-                                <div className={styles.anotherSliderContainer}>
+                                <div key='scale' className={styles.anotherSliderContainer}>
                                     <p>Scale:</p>
                                     <input value={shell[0] * 100} onInput={(ev) => {
                                         shell[0] = Number(ev.currentTarget.value) / 100
@@ -339,7 +365,7 @@ export const Spark = () => {
                                     }} min={0} max={100} value={shell[0] * 100} />
                                 </div>
 
-                                <div className={styles.anotherSliderContainer}>
+                                <div key='opacity' className={styles.anotherSliderContainer}>
                                     <p>Opacity:</p>
                                     <input className={styles.parameterInput} value={shell[2] * 100} onInput={(ev) => {
                                         shell[2] = Number(ev.currentTarget.value) / 100
@@ -351,7 +377,7 @@ export const Spark = () => {
                                     }} min={0} max={100} value={shell[2] * 100} />
                                 </div>
 
-                                <div className={styles.anotherSliderContainer}>
+                                <div key='revSpeed' className={styles.anotherSliderContainer}>
                                     <p>Rev Speed</p>
                                     <input type='number' value={rotation} onInput={(ev) => {
                                         setRotation(Number(ev.currentTarget.value))
@@ -361,7 +387,7 @@ export const Spark = () => {
                                     }} min={0} max={20} />
                                 </div>
 
-                                <div className={styles.anotherSliderContainer}>
+                                <div key='pulseRate' className={styles.anotherSliderContainer}>
                                     <p>Pulse Rate:</p>
                                     <input type='number' value={pulseRate} onInput={(ev) => {
                                         setPulseRate(Number(ev.currentTarget.value))
@@ -371,7 +397,7 @@ export const Spark = () => {
                                     }} />
                                 </div>
 
-                                <div className={styles.anotherSliderContainer}>
+                                <div key='vectors' className={styles.anotherSliderContainer}>
                                     <p>Vectors</p>
                                     <input type='number' value={numberOfLines} onInput={(ev) => {
                                         setNumberOfLines(Number(ev.currentTarget.value))
@@ -382,7 +408,7 @@ export const Spark = () => {
                                 </div>
 
 
-                                <div className={styles.anotherSliderContainer}>
+                                <div key='color' className={styles.anotherSliderContainer}>
                                     <p>Color: </p>
                                     <input type='color' value={'#' + shell[1].toString(16)} onChange={(ev) => {
                                         let hexValue = parseInt(ev.currentTarget.value.substring(1), 16)
@@ -402,10 +428,9 @@ export const Spark = () => {
             </div>}
             {/* End Parameter Box */}
 
-            <div className={styles.dynamicSpark} ref={mainRef}></div>
+            <div key='dynamicSpark' className={styles.dynamicSpark} ref={mainRef}></div>
 
             {/* Start of main section */}
-            
         </div>
     )
 }

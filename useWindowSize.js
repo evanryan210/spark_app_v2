@@ -1,16 +1,13 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.useWindowSize = exports.DeviceSize = void 0;
-const react_1 = require("react");
+import { useEffect, useRef, useState } from 'react';
 //type DeviceSize = 'xSmall' | 'small' | 'medium' | 'large' | 'xLarge';
-var DeviceSize;
+export var DeviceSize;
 (function (DeviceSize) {
     DeviceSize[DeviceSize["xSmall"] = 0] = "xSmall";
     DeviceSize[DeviceSize["small"] = 1] = "small";
     DeviceSize[DeviceSize["medium"] = 2] = "medium";
     DeviceSize[DeviceSize["large"] = 3] = "large";
     DeviceSize[DeviceSize["xLarge"] = 4] = "xLarge";
-})(DeviceSize = exports.DeviceSize || (exports.DeviceSize = {}));
+})(DeviceSize || (DeviceSize = {}));
 //takes the width and returns he device size as text
 const calcDeviceSize = (w) => {
     if (w < 600) {
@@ -29,13 +26,13 @@ const calcDeviceSize = (w) => {
         return DeviceSize.xLarge;
     }
 };
-const useWindowSize = () => {
+export const useWindowSize = () => {
     const body = document.getElementsByTagName('body')[0];
-    let [width, setWidth] = (0, react_1.useState)(body.clientWidth);
-    let [height, setHeight] = (0, react_1.useState)(body.clientHeight);
-    let [deviceSize, setDeviceSize] = (0, react_1.useState)(calcDeviceSize(body.clientWidth));
-    const clockRef = (0, react_1.useRef)();
-    (0, react_1.useEffect)(() => {
+    let [width, setWidth] = useState(body.clientWidth);
+    let [height, setHeight] = useState(body.clientHeight);
+    let [deviceSize, setDeviceSize] = useState(calcDeviceSize(body.clientWidth));
+    const clockRef = useRef();
+    useEffect(() => {
         let eventListener = () => {
             const w = body.clientWidth;
             const h = body.clientHeight;
@@ -60,4 +57,3 @@ const useWindowSize = () => {
         deviceSize
     });
 };
-exports.useWindowSize = useWindowSize;

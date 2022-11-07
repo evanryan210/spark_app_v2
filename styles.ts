@@ -3,10 +3,9 @@ import { mergeStyles, mergeStyleSets} from '@fluentui/merge-styles';
 
 
 export const mainBackground = mergeStyles({
-    position: 'relative',
+    position: 'absolute',
 })
 export const dynamicSpark = mergeStyles({
-    position: 'absolute',
     height: '100%',
     width: '100%',
 })

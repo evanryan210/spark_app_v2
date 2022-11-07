@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-     "pack": "npm pack"
+    "pack": "npm pack"
   },
   "author": "Evan Ryan",
   "license": "ISC",
@@ -13,6 +13,7 @@
     "@fluentui/merge-styles": "^8.5.3",
     "@material/slider": "^14.0.0",
     "@mui/material": "^5.10.12",
+    "react-hotkeys-hook": "^4.0.2",
     "three": "^0.146.0"
   },
   "devDependencies": {
