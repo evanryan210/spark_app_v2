@@ -93,14 +93,14 @@ const useSpark = (mainRef, rValue, shells, sliderValueX, rotation, pulseRate, tr
         }
         function onDocumentTouchStart(event) {
             if (event.touches.length > 1) {
-                event.preventDefault();
+                // event.preventDefault();
                 mouseX = event.touches[0].pageX - windowHalfX;
                 mouseY = event.touches[0].pageY - windowHalfY;
             }
         }
         function onDocumentTouchMove(event) {
             if (event.touches.length == 1) {
-                event.preventDefault();
+                // event.preventDefault();
                 mouseX = event.touches[0].pageX - windowHalfX;
                 mouseY = event.touches[0].pageY - windowHalfY;
             }
@@ -139,29 +139,32 @@ const useSpark = (mainRef, rValue, shells, sliderValueX, rotation, pulseRate, tr
             clearInterval(interval);
         };
         return cleanUp;
-    }, [rValue, windowSize.width, windowSize.height, shells, mainRef, sliderValueX, rotation, pulseRate, translateX, translateY, numberOfLines, backgroundColor, alpha]);
+    }, [rValue, elementWidth, elementHeight, shells, mainRef, sliderValueX, rotation, pulseRate, translateX, translateY, numberOfLines, backgroundColor, alpha]);
 };
-const newBaseShell = [0.25, 0xff7700, 1, 2];
+const newBaseShell = [0.35, 0xff7700, 1, 2];
 export const Spark = (props) => {
     //BUTTON TO ADD DEFAULT SHELL
-    const [rValue, setRValue] = useState('1000');
+    const [rValue, setRValue] = useState(props.scale);
     const [shells, setShells] = useState([[...newBaseShell]]);
     const [sliderValueX, setSliderValueX] = useState(50);
     const [rotation, setRotation] = useState(1);
-    const [pulseRate, setPulseRate] = useState(1);
+    const [pulseRate, setPulseRate] = useState(props.pulseRate);
     const [isOpen, setIsOpen] = useState(false);
     const [translateX, setTranslateX] = useState(50);
     const [translateY, setTranslateY] = useState(50);
     const [numberOfLines, setNumberOfLines] = useState(1500);
     const [backgroundColor, setBackgroundColor] = useState(0xffffff);
     const [alpha, setAlpha] = useState(0);
-    const [elementHeight, setElementHeight] = useState(100);
-    const [elementWidth, setElementWidth] = useState(100);
+    const [elementHeight, setElementHeight] = useState(props.height);
+    const [elementWidth, setElementWidth] = useState(props.width);
     useHotkeys('ctrl+i', () => setIsOpen(!isOpen), [isOpen]);
     useEffect(() => {
+        console.log('version 1.0.3');
+        console.log('i ran on first pass');
         const resizeObserver = new ResizeObserver((entry) => {
-            console.log('Entry');
-            console.log(entry[0].contentBoxSize[0]);
+            let count = 0;
+            console.log('I ran inside my observer');
+            count++;
             setElementWidth(entry[0].contentBoxSize[0].inlineSize + 40);
             setElementHeight(entry[0].contentBoxSize[0].blockSize + 40);
         });
@@ -171,7 +174,7 @@ export const Spark = (props) => {
         if (props.parentElementRef.current)
             resizeObserver.observe(props.parentElementRef.current);
         return cleanUpResizeListener;
-    }, []);
+    }, [elementHeight, elementWidth]);
     const addDefaultShell = () => {
         setShells((existingShells) => [...existingShells, [...newBaseShell]]);
         console.log(shells.length);
@@ -192,9 +195,9 @@ export const Spark = (props) => {
     //     console.log(shells)
     // }
     const mainRef = useRef(null);
-    useSpark(mainRef, Number(rValue), shells, sliderValueX, rotation, pulseRate, translateX, translateY, numberOfLines, backgroundColor, alpha, elementHeight, elementWidth);
-    return (_jsxs("div", Object.assign({ className: styles.mainBackground }, { children: [isOpen && _jsxs("div", Object.assign({ className: styles.parameterContainer }, { children: [_jsxs("div", Object.assign({ style: { display: 'flex', flexDirection: 'row' } }, { children: [_jsxs("label", Object.assign({ htmlFor: 'rVal' }, { children: [" Universal Radius Scale", _jsx("input", { style: { width: '60px' }, value: rValue, id: 'rVal', onInput: (ev) => {
-                                            setRValue(ev.currentTarget.value);
+    useSpark(mainRef, rValue, shells, sliderValueX, rotation, pulseRate, translateX, translateY, numberOfLines, backgroundColor, alpha, elementHeight, elementWidth);
+    return (_jsxs("div", Object.assign({ className: styles.mainBackground }, { children: [_jsxs("div", Object.assign({ className: isOpen ? styles.parameterContainerOpen : styles.parameterContainerClosed }, { children: [_jsxs("div", Object.assign({ style: { display: 'flex', flexDirection: 'row' } }, { children: [_jsxs("label", Object.assign({ htmlFor: 'rVal' }, { children: [" Universal Radius Scale", _jsx("input", { style: { width: '60px' }, value: rValue, id: 'rVal', onInput: (ev) => {
+                                            setRValue(Number(ev.currentTarget.value));
                                         } })] })), _jsxs("div", Object.assign({ style: { width: '200px' } }, { children: [_jsx("p", { children: "Translate X" }), _jsx("input", { type: 'number', value: translateX, onInput: (ev) => {
                                             setTranslateX(Number(ev.currentTarget.value));
                                         }, style: { width: '40px' } }), _jsx(Slider, { value: translateX, size: 'small', min: 0, max: 100, className: styles.slider, onChange: (ev, value) => {

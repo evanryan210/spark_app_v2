@@ -11,10 +11,18 @@ export const dynamicSpark = mergeStyles({
 })
 
 //Three.js parameters
-export const parameterContainer = mergeStyles({
+export const parameterContainerOpen = mergeStyles({
     padding: '20px',
     backgroundColor: '#DEDEDE',
     borderStyle: 'solid',  
+    width: '500px',
+})
+export const parameterContainerClosed = mergeStyles({
+    padding: '20px',
+    backgroundColor: '#DEDEDE',
+    borderStyle: 'solid',  
+    width: '500px',
+    display: 'none'
 })
 export const sliderContainer = mergeStyles({
     width: '100%',
